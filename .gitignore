@@ -1,0 +1,30 @@
+# sbt
+target/
+project/target/
+project/project/
+.cache
+.history
+.lib/
+sbt-launch.jar
+sbt-server.log
+*.log
+
+# Metals
+.metals/
+.bloop/
+.bsp/
+
+# IDEs
+.idea/
+*.iml
+*.iws
+.project
+.classpath
+.settings/
+.vscode/
+
+# OS
+.DS_Store
+
+# Recorded audio used by the tests/demos
+*.wav
