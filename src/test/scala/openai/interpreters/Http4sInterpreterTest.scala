@@ -93,6 +93,17 @@ class Http4sInterpreterTest extends AnyFunSuite:
     assert(seen.head.json.exists(_.hcursor.get[Boolean]("stream") == Right(true)))
   }
 
+  test("chat stream: usage is asked for and carried on Done") {
+    val chunks = List(
+      """{"id":"c","object":"chunk","created":0,"model":"m","choices":[{"index":0,"delta":{"content":"Hi"},"finish_reason":"stop"}]}""",
+      """{"id":"c","object":"chunk","created":0,"model":"m","choices":[],"usage":{"prompt_tokens":11,"completion_tokens":2,"total_tokens":13}}"""
+    )
+    val request = ChatCompletionRequest(model, Nil, stream_options = Some(StreamOptions(include_usage = true)))
+    val (out, seen) = run(ChatStreaming[OpenAIStreamingOp].events(request)) { case "chat.test/v1/chat/completions" => sse(chunks*) }
+    assert(out.last == ChatStreamEvent.Done(ChatMessage(Role.Assistant, "Hi"), Some("stop"), Some(Usage(11, 2, 13))))
+    assert(seen.head.json.exists(_.hcursor.downField("stream_options").get[Boolean]("include_usage") == Right(true)))
+  }
+
   test("chat stream: a malformed chunk fails the stream") {
     val err = intercept[OpenAIError](run(ChatStreaming[OpenAIStreamingOp].deltas(ChatCompletionRequest(model, Nil))) {
       case _ => sse("{not json")

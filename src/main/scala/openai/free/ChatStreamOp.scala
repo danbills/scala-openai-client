@@ -7,8 +7,10 @@ import openai.models.*
 /** One event of a `stream: true` chat: a [[Delta]] per SSE chunk, in order, then exactly one [[Done]]. */
 enum ChatStreamEvent:
   case Delta(delta: DeltaContent)
-  /** The whole reply, assembled from the deltas (see [[ChatStreamAccumulator]]), tool calls included. */
-  case Done(message: ChatMessage, finishReason: Option[String])
+  /** The whole reply, assembled from the deltas (see [[ChatStreamAccumulator]]), tool calls included.
+    * `usage` is present when the request set `stream_options.include_usage` and the server honours it.
+    */
+  case Done(message: ChatMessage, finishReason: Option[String], usage: Option[Usage] = None)
 
 /**
  * Streaming chat as data. An op yields one [[ChatStreamEvent]] at a time: its interpreter targets

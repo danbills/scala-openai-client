@@ -44,16 +44,16 @@ object Http4sChat:
   private def chunk[F[_]](line: String)(using F: Concurrent[F]): F[StreamChunk] =
     F.fromEither(decode[StreamChunk](line).leftMap(e => OpenAIError.BadStreamChunk(e.getMessage, line)))
 
-  /** Chunks with no choices (usage, timings) carry no delta and are skipped. */
+  /** Chunks with no choices carry no delta and are skipped; one of them may carry the request's usage. */
   private def events[F[_]](chunks: Stream[F, StreamChunk]): Stream[F, ChatStreamEvent] =
-    def go(s: Stream[F, StreamChunk], acc: ChatStreamAccumulator, finish: Option[String])
+    def go(s: Stream[F, StreamChunk], acc: ChatStreamAccumulator, finish: Option[String], usage: Option[Usage])
         : Pull[F, ChatStreamEvent, Unit] =
       s.pull.uncons1.flatMap:
-        case None => Pull.output1(ChatStreamEvent.Done(acc.message, finish))
+        case None => Pull.output1(ChatStreamEvent.Done(acc.message, finish, usage))
         case Some((c, rest)) =>
           c.choices.headOption match
-            case None         => go(rest, acc, finish)
+            case None         => go(rest, acc, finish, c.usage.orElse(usage))
             case Some(choice) =>
               Pull.output1(ChatStreamEvent.Delta(choice.delta)) >>
-                go(rest, acc.add(choice.delta), choice.finish_reason.orElse(finish))
-    go(chunks, ChatStreamAccumulator(), None).stream
+                go(rest, acc.add(choice.delta), choice.finish_reason.orElse(finish), c.usage.orElse(usage))
+    go(chunks, ChatStreamAccumulator(), None, None).stream

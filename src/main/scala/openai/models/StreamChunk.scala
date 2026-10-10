@@ -45,5 +45,7 @@ case class StreamChunk(
   `object`: String,
   created: Long,
   model: String,
-  choices: List[StreamChoice]
+  choices: List[StreamChoice],
+  /** Token counts for the whole request: on the last chunk, when the request set `stream_options.include_usage`. */
+  usage: Option[Usage] = None
 ) derives Decoder

@@ -6,12 +6,17 @@ import io.github.iltotore.iron.circe.given
 import openai.RefinedTypes.*
 import openai.enums.StreamEnabled
 
+/** @param include_usage ask for one more chunk at the end of the stream, carrying the request's token counts */
+case class StreamOptions(include_usage: Boolean) derives Encoder.AsObject
+
 case class ChatCompletionRequest(
   model: NonEmptyString,
   messages: List[ChatMessage],
   temperature: Option[Temperature] = None,
   max_tokens: Option[MaxTokens] = None,
   stream: Option[StreamEnabled] = None,
+  /** Only read by servers when streaming. */
+  stream_options: Option[StreamOptions] = None,
   logit_bias: Option[Map[String, Double]] = None,
   chat_template_kwargs: Option[Map[String, Json]] = None,
   grammar: Option[NonEmptyString] = None,
@@ -33,6 +38,7 @@ object ChatCompletionRequest:
     req.temperature.foreach(t => obj = obj.add("temperature", t.asJson))
     req.max_tokens.foreach(m => obj = obj.add("max_tokens", m.asJson))
     req.stream.foreach(s => obj = obj.add("stream", s.asJson))
+    req.stream_options.foreach(o => obj = obj.add("stream_options", o.asJson))
     req.logit_bias.foreach(b => obj = obj.add("logit_bias", b.asJson))
     req.chat_template_kwargs.foreach(k => obj = obj.add("chat_template_kwargs", k.asJson))
     req.grammar.foreach(g => obj = obj.add("grammar", g.asJson))
