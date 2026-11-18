@@ -1,6 +1,6 @@
 // scala-openai-client — standalone sbt build, published to Maven Central.
 // The version comes from the git tag via sbt-dynver.
-val scala3Version = "3.8.3"
+val scala3Version = "3.10.1"
 val circeVersion = "0.14.15"
 val ironVersion = "3.3.1"
 val catsEffectVersion = "3.7.0"
